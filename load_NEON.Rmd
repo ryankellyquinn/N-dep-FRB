@@ -1,0 +1,27 @@
+---
+title: "Untitled"
+author: "Ryan Quinn"
+date: "January 26, 2021"
+output: html_document
+---
+
+NOTES:
+  -If data isn't downloading, try re-installing the neonUtilities library. It updates often and causes errors during the download. 
+  -Not much reason to redownload NEON root data from the megapits, as they are not currently planning another sampling (as of 1/26/2021)
+
+-Download NEON utilities package to download data from NEON repository
+```{r}
+library(neonUtilities)
+```
+
+-Download NEON data from NEON repository
+-Assign relavent data products a name 
+```{r}
+loaddata <- loadByProduct("DP1.10066.001", site="all", startdate=NA, enddate=NA, package="basic", check.size=F)
+
+data <- loaddata$mpr_perrootsample
+cdata <- loaddata$mpr_carbonNitrogen
+
+write.csv(data, file = "data/NEON_rootsample.csv")
+write.csv(cdata, file = "data/NEON_CN.csv")
+```
