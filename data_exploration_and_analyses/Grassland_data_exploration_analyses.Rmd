@@ -1,0 +1,102 @@
+---
+title: "Untitled"
+author: "Ryan Quinn"
+date: "February 2, 2021"
+output: html_document
+---
+ 
+-Isolate grassland data
+-Cut off any depths below 1 meter 
+```{r}
+df.g <- subset(df, df$type == "grassland")
+df.g <- subset(df.g, depth == 0 | depth == 10 | depth == 20 | depth == 30 | depth == 40 | depth == 50 | depth == 60 | depth == 70 | depth == 80 | depth == 90) #only interested in top 100cm
+```
+
+-Look at summary stats for each depth distribution 
+```{r}
+grass <- df.g %>% group_by(depth) %>% summarize(mean = mean(as.numeric(rb)), 
+                                    se = se.error(rb), 
+                                    n = length(rb))
+```
+*N is only >20 for the first three depth distributions.
+
+-Use lm() to explore 
+```{r}
+df.g <- subset(df.g, !is.na(df.g$rb)) #remove where we don't know plant type 
+grass.rb <- lm(log(rb)~as.factor(depth), data=df.g) 
+summary(grass.rb)
+anova(grass.rb)
+emmeans:: emmeans(grass.rb, pairwise ~ depth)
+
+plot(log(df.g$rb) ~ df.g$depth) #very clear decline in FRB with increasing soil depth 
+```
+
+-Grassland nitrogen deposition plot (Since replication is not great below 30cm, we will only use the surface soil layers to attempt to identify relationships between FRB and nitrogen deposition.)
+```{r}
+iso0 <- subset(df.g, df.g$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$ndep)))
+
+iso10 <- subset(df.g, df.g$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$ndep)))
+
+iso20 <- subset(df.g, df.g$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$ndep)))
+
+plot(log(df.g$rb[df.g$depth == 0]) ~  df.g$ndep[df.g$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.g$rb[df.g$depth == 10]) ~  df.g$ndep[df.g$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.g$rb[df.g$depth == 20]) ~  df.g$ndep[df.g$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+-Use lm() to explore 
+```{r}
+df.gn <- subset(df.g, df.g$depth < 40)
+grass.rb.gn <- lm(log(rb)~as.factor(depth) * as.numeric(ndep), data=df.gn) 
+anova(grass.rb.gn)
+summary(grass.rb.gn) 
+```
+
+Other Interesting plots: 
+
+-Grassland MAT plot
+```{r}
+iso0 <- subset(df.g, df.g$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$map)))
+
+iso10 <- subset(df.g, df.g$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$map)))
+
+iso20 <- subset(df.g, df.g$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$map)))
+
+plot(log(df.g$rb[df.g$depth == 0]) ~  df.g$map[df.g$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.g$rb[df.g$depth == 10]) ~  df.g$map[df.g$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.g$rb[df.g$depth == 20]) ~  df.g$map[df.g$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+-Grassland MAT plot
+```{r}
+iso0 <- subset(df.g, df.g$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$mat)))
+
+iso10 <- subset(df.g, df.g$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$mat)))
+
+iso20 <- subset(df.g, df.g$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$mat)))
+
+plot(log(df.g$rb[df.g$depth == 0]) ~  df.g$mat[df.g$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.g$rb[df.g$depth == 10]) ~  df.g$mat[df.g$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.g$rb[df.g$depth == 20]) ~  df.g$mat[df.g$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```

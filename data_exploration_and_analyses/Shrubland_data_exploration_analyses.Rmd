@@ -1,0 +1,134 @@
+---
+title: "Untitled"
+author: "Ryan Quinn"
+date: "February 2, 2021"
+output: html_document
+---
+
+-Isolate shrub data 
+-Cut off any depths below 1 meter
+-Remove outliers and missing datacells. 
+```{r}
+df.s <- subset(df, df$type == "shrub")
+df.s <- subset(df.s, !is.na(df.s$rb)) #remove where we don't know plant type 
+df.s <- subset(df.s, depth == 0 | depth == 10 | depth == 20 | depth == 30 | depth == 40 | depth == 50 | depth == 60 | depth == 70 | depth == 80 | depth == 90)
+df.s <- subset(df.s, df.s$rb <800)
+```
+
+-Look at summary stats for each depth distribution 
+```{r}
+shrub <- df.s %>% group_by(depth) %>% summarize(mean = mean(as.numeric(rb)), 
+                                    se = se.error(rb), 
+                                    n = length(rb))
+```
+*Sparse data after 30cm 
+
+-Use lm() to explore frb depth distribution in North American shrublands
+```{r}
+df.s <- subset(df.s, !is.na(df.s$rb)) #remove where we don't know plant type 
+sh.rb <- lm(log(rb)~as.factor(depth), data=df.s) 
+summary(sh.rb)
+anova(sh.rb) 
+emmeans:: emmeans(sh.rb, pairwise ~ depth)
+
+plot(log(df.s$rb) ~ df.s$depth) 
+```
+
+-Shrubland nitrogen deposition plot (Since replication is not great below 30cm, we will only use the surface soil layers to attempt to identify relationships between FRB and nitrogen deposition.)
+```{r}
+iso0 <- subset(df.s, df.s$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$ndep)))
+
+iso10 <- subset(df.s, df.s$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$ndep)))
+
+iso20 <- subset(df.s, df.s$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$ndep)))
+
+plot(log(df.s$rb[df.s$depth == 0]) ~  df.s$ndep[df.s$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.s$rb[df.s$depth == 10]) ~  df.s$ndep[df.s$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.s$rb[df.s$depth == 20]) ~  df.s$ndep[df.s$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+-Use lm() to explore 
+```{r}
+df.sn <- subset(df.s, df.s$depth < 30)
+shrub.rb.sn <- lm(log(rb)~as.factor(depth) * as.numeric(ndep), data=df.sn) 
+anova(shrub.rb.sn)
+summary(shrub.rb.sn) 
+```
+
+Other Interesting plots: 
+
+-Grassland MAT plot
+```{r}
+iso0 <- subset(df.s, df.s$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$map)))
+
+iso10 <- subset(df.s, df.s$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$map)))
+
+iso20 <- subset(df.s, df.s$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$map)))
+
+plot(log(df.s$rb[df.s$depth == 0]) ~  df.s$map[df.s$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.s$rb[df.s$depth == 10]) ~  df.s$map[df.s$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.s$rb[df.s$depth == 20]) ~  df.s$map[df.s$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+-Grassland MAT plot
+```{r}
+iso0 <- subset(df.s, df.s$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$mat)))
+
+iso10 <- subset(df.s, df.s$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$mat)))
+
+iso20 <- subset(df.s, df.s$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$mat)))
+
+plot(log(df.s$rb[df.s$depth == 0]) ~  df.s$mat[df.s$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.s$rb[df.s$depth == 10]) ~  df.s$mat[df.s$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.s$rb[df.s$depth == 20]) ~  df.s$mat[df.s$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

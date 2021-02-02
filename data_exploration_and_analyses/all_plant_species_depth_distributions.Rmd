@@ -1,0 +1,24 @@
+---
+title: "Untitled"
+author: "Ryan Quinn"
+date: "February 2, 2021"
+output: html_document
+---
+
+-Remove FRB at depths below 1 meter
+-Isolate only known, targeted plant species
+```{r}
+df.all <- subset(df, df$type == "grassland" | df$type=="forest" | df$type=="shrub")
+df.all <- subset(df.all, depth == 0 | depth == 10 | depth == 20 | depth == 30 | depth == 40 | depth == 50 | depth == 60 | depth == 70 | depth == 80 | depth == 90)
+df.all <- subset(df.all, !is.na(df.all$rb)) #remove where we don't know plant type 
+df.all <- subset(df.all, !is.na(df.all$depth)) #remove where we don't know plant type 
+df.all <- subset(df.all, !is.na(df.all$type)) #remove where we don't know plant type 
+```
+
+-Compare FRB depth distribution among plant types 
+  -lm() to examine differences in depth distributon 
+```{r}
+all.rb <- lm(df.all$rb ~ as.factor(df.all$depth)*as.factor(df.all$type))
+anova(all.rb)
+emmeans:: emmeans(all.rb, pairwise ~ type | depth)
+```

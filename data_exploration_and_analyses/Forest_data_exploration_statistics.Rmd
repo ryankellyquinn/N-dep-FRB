@@ -1,0 +1,135 @@
+---
+title: "Untitled"
+author: "Ryan Quinn"
+date: "February 2, 2021"
+output: html_document
+---
+
+-Isolate forest data
+-Cut off any depths below 1 meter 
+-Remove outliers 
+```{r}
+df.f <- subset(df, df$type == "forest")
+df.f <- subset(df.f, depth == 0 | depth == 10 | depth == 20 | depth == 30 | depth == 40 | depth == 50 | depth == 60 | depth == 70 | depth == 80 | depth == 90)
+df.f <- subset(df.f, !is.na(df.f$rb)) #remove where we don't know plant type 
+df.f <- subset(df.f, df.f$rb <1100) #obviously these are outliers, get rid of them, they're not real data
+df.f <- subset(df.f, df.f$rb >0) #again, obviously there are no instances of negative fine root biomass 
+```
+
+-Look at summary stats for each depth distribution 
+```{r}
+forest <- df.f %>% group_by(depth) %>% summarize(mean = mean(as.numeric(rb)), 
+                                    se = se.error(rb), 
+                                    n = length(rb))
+```
+*Very useful dataset!! Great replication, especially at top layers (and especially for belowground ecological data!)/ 
+
+-Use lm() to explore 
+```{r}
+df.f <- subset(df.f, !is.na(df.f$rb)) #remove where we don't know plant type 
+for.rb <- lm(log(rb)~as.factor(depth), data=df.f) 
+summary(for.rb)
+anova(for.rb) #Interesting, the decrease in FRB with increasing soil depth is not nearly as pronounced as in grasslands. This is EXPECTED. Trees root more deeply and denser than grasslands which have shallow root systems, comparatively. 
+emmeans:: emmeans(for.rb, pairwise ~ depth)
+
+plot(log(df.f$rb) ~ df.f$depth) #very clear decline in FRB with increasing soil depth 
+```
+
+-Forest nitrogen deposition plot (only plotting the first 30cm because the plot wouuld be to crowded otherwise.)
+```{r}
+iso0 <- subset(df.f, df.f$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$ndep)))
+
+iso10 <- subset(df.f, df.f$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$ndep)))
+
+iso20 <- subset(df.f, df.f$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$ndep)))
+
+iso30 <- subset(df.f, df.f$depth == 30)
+line30 <- (lm(log(iso30$rb) ~ as.numeric(iso30$ndep)))
+
+iso40 <- subset(df.f, df.f$depth == 40)
+line40 <- (lm(log(iso40$rb) ~ as.numeric(iso40$ndep)))
+
+iso50 <- subset(df.f, df.f$depth == 50)
+line50 <- (lm(log(iso50$rb) ~ as.numeric(iso50$ndep)))
+
+iso60 <- subset(df.f, df.f$depth == 60)
+line60 <- (lm(log(iso60$rb) ~ as.numeric(iso60$ndep)))
+
+plot(log(df.f$rb[df.f$depth == 0]) ~  df.f$ndep[df.f$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.f$rb[df.f$depth == 10]) ~  df.f$ndep[df.f$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.f$rb[df.f$depth == 20]) ~  df.f$ndep[df.f$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+
+par(mfrow=c(3,3))
+plot(log(df.f$rb[df.f$depth == 0]) ~  df.f$ndep[df.f$depth == 0], pch=19, type="p")
+abline(line0)
+plot(log(df.f$rb[df.f$depth == 10]) ~  df.f$ndep[df.f$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+plot(log(df.f$rb[df.f$depth == 20]) ~  df.f$ndep[df.f$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+plot(log(df.f$rb[df.f$depth == 30]) ~  df.f$ndep[df.f$depth == 30], pch=19, type="p", col="red")
+abline(line30, col="red")
+plot(log(df.f$rb[df.f$depth == 40]) ~  df.f$ndep[df.f$depth == 40], col="purple", pch=19, type="p")
+abline(line40, col="purple")
+plot(log(df.f$rb[df.f$depth == 50]) ~  df.f$ndep[df.f$depth == 50], col="orange", pch=19, type="p")
+abline(line50, col="orange")
+```
+
+-Use lm() to explore 
+  -Cut out anything above 30cm because there isn't great representation across the N deposition gradient below that soil layer (even though we have lots of FRB at all depths!)
+```{r}
+df.fn <- subset(df.f, df.f$depth < 30)
+for.rb.gn <- lm(log(rb)~as.factor(depth) * as.numeric(ndep), data=df.fn) 
+anova(for.rb.gn)
+summary(for.rb.gn) 
+```
+
+Other Interesting plots: 
+
+-Forest MAT plot
+```{r}
+iso0 <- subset(df.f, df.f$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$map)))
+
+iso10 <- subset(df.f, df.f$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$map)))
+
+iso20 <- subset(df.f, df.f$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$map)))
+
+plot(log(df.f$rb[df.f$depth == 0]) ~  df.f$map[df.f$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.f$rb[df.f$depth == 10]) ~  df.f$map[df.f$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.f$rb[df.f$depth == 20]) ~  df.f$map[df.f$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+-Forest MAT plot
+```{r}
+iso0 <- subset(df.f, df.f$depth == 0)
+line0 <- (lm(log(iso0$rb) ~ as.numeric(iso0$mat)))
+
+iso10 <- subset(df.f, df.f$depth == 10)
+line10 <- (lm(log(iso10$rb) ~ as.numeric(iso10$mat)))
+
+iso20 <- subset(df.f, df.f$depth == 20)
+line20 <- (lm(log(iso20$rb) ~ as.numeric(iso20$mat)))
+
+plot(log(df.f$rb[df.f$depth == 0]) ~  df.f$mat[df.f$depth == 0], pch=19, type="p")
+abline(line0)
+lines(log(df.f$rb[df.f$depth == 10]) ~  df.f$mat[df.f$depth == 10], col="green", pch=19, type="p")
+abline(line10, col="green")
+lines(log(df.f$rb[df.f$depth == 20]) ~  df.f$mat[df.f$depth == 20], col="blue", pch=19, type="p")
+abline(line20, col="blue")
+legend("bottomright", col=c("black", "green", "blue"), c("0-10", "10-20", "20-30"), pch=19, lty=1, lwd=2)
+```
+
+
